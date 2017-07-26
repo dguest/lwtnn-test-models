@@ -6,7 +6,8 @@ from keras.models import Model
 import numpy as np
 
 tracks = layers.Input(shape=(None, 4), name='tracks')
-rnnip_raw = layers.GRU(5, name='rnnip_lstm')(tracks)
+tdd_tracks = layers.TimeDistributed(layers.Dense(4))(tracks)
+rnnip_raw = layers.GRU(5, name='rnnip_lstm')(tdd_tracks)
 vx_inputs = layers.Input(shape=(1,), name='vertex_info')
 
 ip3d_inputs = layers.Input(shape=(3,), name='ip3d')
