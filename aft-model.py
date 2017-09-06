@@ -5,35 +5,21 @@ from keras import layers
 from keras.models import Model
 import numpy as np
 
-tracks = layers.Input(shape=(None, 4), name='tracks')
+tracks = layers.Input(shape=(None, 4))
 tdd_tracks = layers.TimeDistributed(layers.Dense(4))(tracks)
-rnnip_raw = layers.GRU(5, name='rnnip_lstm')(tdd_tracks)
-vx_inputs = layers.Input(shape=(1,), name='vertex_info')
-
-ip3d_inputs = layers.Input(shape=(3,), name='ip3d')
-dl1_inputs = layers.concatenate([vx_inputs,ip3d_inputs]) #4
-
-dl_inputs = layers.concatenate([rnnip_raw, vx_inputs]) #6
-dl1_first_layer = layers.Dense(6, name='DL1_layer1')(dl1_inputs)
-dl1_out_layer = layers.Dense(4, name='DL1_shared', activation='softmax')
-dl1 = dl1_out_layer(dl1_first_layer)
-dl2 = dl1_out_layer(dl_inputs)
-rnnip = layers.Dense(4, name='rnnip_out')(rnnip_raw)
-model = Model(inputs=[tracks, vx_inputs, ip3d_inputs],
-              outputs=[dl1, dl2, rnnip])
+rnnip_raw = layers.GRU(5, return_sequences=True)(tdd_tracks)
+model = Model(inputs=[tracks],
+              outputs=[rnnip_raw])
 model.compile(optimizer='adam', loss='categorical_crossentropy')
 
-with open('ftag-arch.json','w') as archetecture:
-    archetecture.write(model.to_json(indent=2, sort_keys=True) )
+with open('tdd-architecture.json','w') as architecture:
+    architecture.write(model.to_json(indent=2, sort_keys=True) )
 
-model.save_weights('ftag-weights.h5')
+model.save_weights('tdd-weights.h5')
 
 from keras.utils.vis_utils import model_to_dot
 model_to_dot(model).write_pdf('ftag-model.pdf')
 
 trk = np.linspace(-1, 1, 20)[:,None] * np.linspace(-1, 1, 4)[None,:]
-vx = np.array([0])[None,:]
-ip3d = np.linspace(-1, 1, 3)[None,:]
-for output in model.predict([trk[None,:], vx, ip3d]):
-    print(output)
+print(model.predict([trk[None,:]]))
 
